@@ -3,6 +3,7 @@ package fetcher
 import (
     "fmt"
     "github.com/danielemoraschi/go-sitemap-common/http"
+    "strings"
 )
 
 // fakeFetcher is Fetcher that returns canned results.
@@ -13,12 +14,12 @@ type fakeResult struct {
     urls []string
 }
 
-func (f fakeFetcher) Fetch(httpResource http.HttpResource) (string, []string, error) {
-    if res, ok := f[httpResource.Url()]; ok {
-        return res.body, res.urls, nil
+func (f fakeFetcher) Fetch(res *http.HttpResource) ([]byte, error) {
+    if res, ok := f[res.String()]; ok {
+        return []byte(strings.Join(res.urls[:], ",")), nil
     }
 
-    return "", nil, fmt.Errorf("Not found: %s", httpResource.Url())
+    return nil, fmt.Errorf("Not found: %s", res.Url())
 }
 
 // fetcher is a populated fakeFetcher.
@@ -26,47 +27,47 @@ var FakeFetcher = fakeFetcher{
     "http://golang.org/": &fakeResult{
         "The Go Programming Language",
         []string{
-            "http://go.com/",
-            "http://golang.org/pkg/",
-            "http://golang.org/cmd/",
+            "<a href='http://go.com/'>link</a>",
+            "<a href='http://golang.org/pkg/'>link</a>",
+            "<a href='http://golang.org/cmd/'>link</a>",
         },
     },
     "http://golang.org/pkg/": &fakeResult{
         "Packages",
         []string{
-            "http://golang.org/",
-            "http://golang.org/cmd/",
-            "http://golang.org/pkg/fmt/",
-            "http://golang.org/pkg/os/",
+            "<a href='http://golang.org/'>link</a>",
+            "<a href='http://golang.org/cmd/'>link</a>",
+            "<a href='http://golang.org/pkg/fmt/'>link</a>",
+            "<a href='http://golang.org/pkg/os/'>link</a>",
         },
     },
     "http://golang.org/pkg/fmt/": &fakeResult{
         "Package fmt",
         []string{
-            "http://golang.org/",
-            "http://golang.org/pkg/",
-            "http://golang.org/pkg/fmt/03",
+            "<a href='http://golang.org/'>link</a>",
+            "<a href='http://golang.org/pkg/'>link</a>",
+            "<a href='http://golang.org/pkg/fmt/03'>link</a>",
         },
     },
     "http://golang.org/pkg/os/": &fakeResult{
         "Package os",
         []string{
-            "http://golang.org/",
-            "http://golang.org/pkg/",
-            "http://golang.org/pkg/os/03",
+            "<a href='http://golang.org/'>link</a>",
+            "<a href='http://golang.org/pkg/'>link</a>",
+            "<a href='http://golang.org/pkg/os/03'>link</a>",
         },
     },
     "http://go.com/": &fakeResult{
         "Go Base",
         []string{
-            "http://go.com/re1",
-            "http://go.com/re2",
+            "<a href='http://go.com/re1'>link</a>",
+            "<a href='http://go.com/re2'>link</a>",
         },
     },
     "http://go.com/re1": &fakeResult{
         "Go R1",
         []string{
-            "http://golang.org/",
+            "<a href='http://golang.org/'>link</a>",
         },
     },
 }

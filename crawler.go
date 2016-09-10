@@ -6,14 +6,15 @@ import (
     "github.com/danielemoraschi/go-sitemap-common/policy"
     "github.com/danielemoraschi/go-sitemap-common/http"
     "github.com/danielemoraschi/go-sitemap-common/http/fetcher"
+    "github.com/danielemoraschi/go-sitemap-common/parser"
 )
 
 var mu = &sync.Mutex{}
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(urlsList *[]string, wg *sync.WaitGroup, url string, depth int,
-    fetcher fetcher.FetcherInterface, policies []policy.PolicyInterface) {
+func Crawl(urlsList *[]http.HttpResource, wg *sync.WaitGroup, url string, depth int,
+    fetcher fetcher.FetcherInterface, parser parser.ParserInterface, policies []policy.PolicyInterface) {
 
     defer wg.Done()
 
@@ -21,13 +22,25 @@ func Crawl(urlsList *[]string, wg *sync.WaitGroup, url string, depth int,
 
     fmt.Printf("Visiting: %s\n", url)
 
-    body, urls, err := fetcher.Fetch(http.HttpResourceFactory(url))
+    urlResource, err := http.HttpResourceFactory(url, "")
     if err != nil {
-        fmt.Println(err)
+        fmt.Println("HttpResource URL error: ", err)
         return
     }
 
-    fmt.Printf("Found: %s %q\n", urls, body)
+    _, err = fetcher.Fetch(&urlResource)
+    if err != nil {
+        fmt.Println("Fetch error: ", err)
+        return
+    }
+
+    urls, err := parser.Parse(urlResource)
+    if err != nil {
+        fmt.Println("Parse error: ", err)
+        return
+    }
+
+    //fmt.Printf("Found: %s\n", urls)
 
     mu.Lock()
     *urlsList = append(*urlsList, urls...)
@@ -38,9 +51,9 @@ func Crawl(urlsList *[]string, wg *sync.WaitGroup, url string, depth int,
     }
 
     for _, u := range urls {
-        if policy.UrlAllowedByPolicies(policies, u) {
+        if policy.UrlAllowedByPolicies(policies, u.String()) {
             wg.Add(1)
-            go Crawl(urlsList, wg, u, depth-1, fetcher, policies)
+            go Crawl(urlsList, wg, u.String(), depth-1, fetcher, parser, policies)
         }
     }
 

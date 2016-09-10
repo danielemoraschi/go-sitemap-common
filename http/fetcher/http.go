@@ -1,28 +1,27 @@
 package fetcher
 
 import (
-    "log"
     "io/ioutil"
-    "github.com/danielemoraschi/go-sitemap-common/http"
+    "net/http"
+    myhttp "github.com/danielemoraschi/go-sitemap-common/http"
 )
 
-func (res *HttpResource) Fetch(httpResource http.HttpResource) (body []byte, err error) {
-    if len(res.content) > 0 {
-        return res.content
-    }
+type HttpFetcher struct {
+    FetcherInterface
+}
 
-    response, err := http.Get(res.Url())
-    if err != nil {
-        log.Fatal(err)
-    }
+func (f HttpFetcher) Fetch(res *myhttp.HttpResource) ([]byte, error) {
+    response, err := http.Get(res.String())
 
     defer response.Body.Close()
-
-    res.content, err = ioutil.ReadAll(response.Body)
-
     if err != nil {
-        log.Fatal(err)
+        return nil, err
     }
 
-    return res.content
+    content, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return nil, err
+    }
+    res.SetContent(content)
+    return content, nil
 }

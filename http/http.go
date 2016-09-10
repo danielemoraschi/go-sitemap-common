@@ -2,9 +2,6 @@ package http
 
 import (
     "net/url"
-    "net/http"
-    "log"
-    "io/ioutil"
 )
 
 type HttpResource struct {
@@ -12,8 +9,12 @@ type HttpResource struct {
     content []byte
 }
 
-func (res *HttpResource) Url() string {
+func (res HttpResource) String() string {
     return res.url.String()
+}
+
+func (res *HttpResource) Url() *url.URL {
+    return res.url
 }
 
 func (res *HttpResource) SetContent(content []byte) []byte {
@@ -22,32 +23,22 @@ func (res *HttpResource) SetContent(content []byte) []byte {
 }
 
 func (res *HttpResource) Content() []byte {
-    if len(res.content) > 0 {
-        return res.content
-    }
-
-    response, err := http.Get(res.Url())
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    defer response.Body.Close()
-
-    res.content, err = ioutil.ReadAll(response.Body)
-
-    if err != nil {
-        log.Fatal(err)
-    }
-
     return res.content
 }
 
-func HttpResourceFactory(baseUrl string) HttpResource {
+func HttpResourceFactory(baseUrl string, fragment string) (ret HttpResource, err error) {
     parsedUrl, err := url.ParseRequestURI(baseUrl)
     if err != nil {
-        panic(err)
+        return ret, err
     }
 
-    res := HttpResource{url: parsedUrl}
-    return res
+    if fragment != "" {
+        parsedFragment, err := url.Parse(fragment)
+        if err != nil {
+            return ret, err
+        }
+        parsedUrl = parsedUrl.ResolveReference(parsedFragment)
+    }
+
+    return HttpResource{url: parsedUrl}, nil
 }
