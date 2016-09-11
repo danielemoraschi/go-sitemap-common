@@ -9,11 +9,10 @@ import (
     "github.com/danielemoraschi/go-sitemap-common/parser"
 )
 
-var mu = &sync.Mutex{}
 
 type Urls struct {
-    data []http.HttpResource
     sync.RWMutex
+    data []http.HttpResource
 }
 
 func (s *Urls) AddList(values []http.HttpResource) {
@@ -36,25 +35,25 @@ func (s *Urls) Reset() {
 
 func (s *Urls) Data() []http.HttpResource {
     s.RLock()
-    defer s.RUnlock()
-    return s.data
+    n := s.data
+    s.RUnlock()
+    return n
 }
 
 func (s *Urls) Count() int {
     s.RLock()
-    defer s.RUnlock()
-    return len(s.data)
+    n := len(s.data)
+    s.RUnlock()
+    return n
 }
 
 func (s *Urls) RemoveDuplicatesUnordered() {
     encountered := map[string]http.HttpResource{}
-
     // Create a map of all unique elements.
     for v, el := range s.data {
         encountered[s.data[v].String()] = el
     }
 
-    // Place all keys from the map into a slice.
     s.Reset()
     for _, el := range encountered {
         s.Add(el)

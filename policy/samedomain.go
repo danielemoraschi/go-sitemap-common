@@ -10,7 +10,7 @@ type SameDomainPolicy struct {
     PolicyInterface
 }
 
-func (p SameDomainPolicy) ShouldVisit(u string) bool {
+func (p *SameDomainPolicy) ShouldVisit(u string) bool {
     urlToCheck, err := url.ParseRequestURI(u)
     if err != nil {
         panic(err)
@@ -27,6 +27,5 @@ func SameDomainPolicyFactory(baseUrl string) PolicyInterface {
     if err != nil {
         panic(err)
     }
-    p := SameDomainPolicy{baseURL: URL}
-    return p
+    return &SameDomainPolicy{baseURL: URL}
 }

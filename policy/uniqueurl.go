@@ -8,7 +8,7 @@ type UniqueUrlPolicy struct {
     PolicyInterface
 }
 
-func (p UniqueUrlPolicy) ShouldVisit(url string) bool {
+func (p *UniqueUrlPolicy) ShouldVisit(url string) bool {
     p.Lock()
     defer p.Unlock()
     _, ok := p.urlMap[url]
@@ -17,6 +17,5 @@ func (p UniqueUrlPolicy) ShouldVisit(url string) bool {
 }
 
 func UniqueUrlPolicyFactory() PolicyInterface {
-    p := UniqueUrlPolicy{urlMap: make(map[string]bool)}
-    return p
+    return &UniqueUrlPolicy{urlMap: make(map[string]bool)}
 }
