@@ -1,5 +1,6 @@
 package policy
 
+
 type PolicyInterface interface {
     // Fetch returns the body of URL and
     // a slice of URLs found on that page.

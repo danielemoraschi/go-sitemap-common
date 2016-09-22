@@ -11,11 +11,63 @@ import (
 
 var mu = &sync.Mutex{}
 
+type Urls struct {
+    data []http.HttpResource
+    sync.RWMutex
+}
+
+func (s *Urls) AddList(values []http.HttpResource) {
+    s.Lock()
+    s.data = append(s.data, values...)
+    s.Unlock()
+}
+
+func (s *Urls) Add(values http.HttpResource) {
+    s.Lock()
+    s.data = append(s.data, values)
+    s.Unlock()
+}
+
+func (s *Urls) Reset() {
+    s.Lock()
+    s.data = []http.HttpResource{}
+    s.Unlock()
+}
+
+func (s *Urls) Data() []http.HttpResource {
+    s.RLock()
+    defer s.RUnlock()
+    return s.data
+}
+
+func (s *Urls) Count() int {
+    s.RLock()
+    defer s.RUnlock()
+    return len(s.data)
+}
+
+func (s *Urls) RemoveDuplicatesUnordered() {
+    encountered := map[string]http.HttpResource{}
+
+    // Create a map of all unique elements.
+    for v, el := range s.data {
+        encountered[s.data[v].String()] = el
+    }
+
+    // Place all keys from the map into a slice.
+    s.Reset()
+    for _, el := range encountered {
+        s.Add(el)
+    }
+}
+
+
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(urlsList *[]http.HttpResource, wg *sync.WaitGroup, url string, depth int,
+func Crawl(semaphore chan bool, urlsList *Urls, wg *sync.WaitGroup, url string, depth int,
     fetcher fetcher.FetcherInterface, parser parser.ParserInterface, policies []policy.PolicyInterface) {
 
+    defer func() { <-semaphore }()
     defer wg.Done()
 
     policy.UrlAllowedByPolicies(policies, url)
@@ -42,9 +94,7 @@ func Crawl(urlsList *[]http.HttpResource, wg *sync.WaitGroup, url string, depth 
 
     //fmt.Printf("Found: %s\n", urls)
 
-    mu.Lock()
-    *urlsList = append(*urlsList, urls...)
-    mu.Unlock()
+    urlsList.AddList(urls)
 
     if depth <= 0 {
         return
@@ -53,7 +103,7 @@ func Crawl(urlsList *[]http.HttpResource, wg *sync.WaitGroup, url string, depth 
     for _, u := range urls {
         if policy.UrlAllowedByPolicies(policies, u.String()) {
             wg.Add(1)
-            go Crawl(urlsList, wg, u.String(), depth-1, fetcher, parser, policies)
+            go Crawl(semaphore, urlsList, wg, u.String(), depth-1, fetcher, parser, policies)
         }
     }
 

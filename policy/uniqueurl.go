@@ -3,17 +3,16 @@ package policy
 import "sync"
 
 type UniqueUrlPolicy struct {
-    sync.Mutex
+    sync.RWMutex
     urlMap map[string]bool
     PolicyInterface
 }
 
 func (p UniqueUrlPolicy) ShouldVisit(url string) bool {
     p.Lock()
+    defer p.Unlock()
     _, ok := p.urlMap[url]
     p.urlMap[url] = true
-    p.Unlock()
-
     return !ok
 }
 
