@@ -30,6 +30,7 @@ func (p HttpParser) Parse(resource http.HttpResource) ([]http.HttpResource, erro
         if err != nil {
             fmt.Printf("Error %v\n", err)
         } else {
+            //fmt.Printf("Matched %v\n", res.String())
             resources = append(resources, res)
         }
     }

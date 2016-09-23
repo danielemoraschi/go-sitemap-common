@@ -71,7 +71,7 @@ func Crawl(semaphore chan bool, urlsList *Urls, wg *sync.WaitGroup, url string, 
 
     policy.UrlAllowedByPolicies(policies, url)
 
-    fmt.Printf("Visiting: %s\n", url)
+    //fmt.Printf("Visiting: %s\n", url)
 
     urlResource, err := http.HttpResourceFactory(url, "")
     if err != nil {
