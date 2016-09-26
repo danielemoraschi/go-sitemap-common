@@ -1,9 +1,10 @@
 package template
 
 import (
-    "github.com/danielemoraschi/go-sitemap-common"
+    "github.com/danielemoraschi/go-sitemap-common/http"
 )
 
 type TemplateInterface interface {
-    Generate(urlList crawler.Urls) (string, error)
+    Set(data []http.HttpResource) TemplateInterface
+    Generate() ([]byte, error)
 }
