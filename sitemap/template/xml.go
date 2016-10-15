@@ -2,6 +2,7 @@ package template
 
 import (
     "github.com/danielemoraschi/go-sitemap-common/http"
+    "github.com/danielemoraschi/go-sitemap-common/sitemap"
     "encoding/xml"
 )
 
@@ -22,7 +23,7 @@ type XMLUrlSet struct {
 type XMLUrl struct {
     XMLName xml.Name        `xml:"url"`
     Loc string              `xml:"loc"`
-    Frequency ChangeFreq    `xml:"changefreq,omitempty"`
+    Frequency sitemap.ChangeFreq    `xml:"changefreq,omitempty"`
     Priority float64        `xml:"priority,omitempty"`
 }
 
@@ -37,7 +38,7 @@ func (urlSet *XMLUrlSet) Set(data []http.HttpResource) TemplateInterface {
     for _, el := range data {
         urlSet.Urls = append(urlSet.Urls, XMLUrl{
             Loc: el.String(),
-            Frequency: MONTHLY,
+            Frequency: sitemap.MONTHLY,
             Priority: 1.0,
         })
     }
@@ -48,8 +49,8 @@ func (urlSet *XMLUrlSet) Set(data []http.HttpResource) TemplateInterface {
 // Generate serializes the sitemap URLSet to XML, with the <urlset> xmlns added
 // and the XML preamble prepended.
 func (urlSet *XMLUrlSet) Generate() (siteMapXML []byte, err error) {
-    if len(urlSet.Urls) > MAXURLS {
-        err = ErrExceededMaxURLs
+    if len(urlSet.Urls) > sitemap.MAXURLS {
+        err = sitemap.ErrExceededMaxURLs
         return
     }
 
@@ -57,14 +58,14 @@ func (urlSet *XMLUrlSet) Generate() (siteMapXML []byte, err error) {
     siteMapXML = []byte(HEADER)
 
     var urlSetXML []byte
-    urlSetXML, err = xml.Marshal(urlSet)
+    urlSetXML, err = xml.MarshalIndent(urlSet, "", "    ")
 
     if err == nil {
         siteMapXML = append(siteMapXML, urlSetXML...)
     }
 
-    if len(siteMapXML) > MAXFILESIZE {
-        err = ErrExceededMaxFileSize
+    if len(siteMapXML) > sitemap.MAXFILESIZE {
+        err = sitemap.ErrExceededMaxFileSize
     }
 
     return siteMapXML, err

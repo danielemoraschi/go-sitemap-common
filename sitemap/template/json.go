@@ -2,6 +2,7 @@ package template
 
 import (
     "github.com/danielemoraschi/go-sitemap-common/http"
+    "github.com/danielemoraschi/go-sitemap-common/sitemap"
     "encoding/json"
 )
 
@@ -15,7 +16,7 @@ type JsonUrlSet struct {
 type JsonUrl struct {
     Url       string        `json:"url"`
     Loc       string        `json:"loc"`
-    Frequency ChangeFreq    `json:"changefreq,omitempty"`
+    Frequency sitemap.ChangeFreq    `json:"changefreq,omitempty"`
     Priority  float64       `json:"priority,omitempty"`
 }
 
@@ -30,7 +31,7 @@ func (urlSet *JsonUrlSet) Set(data []http.HttpResource) TemplateInterface {
     for _, el := range data {
         urlSet.UrlSet = append(urlSet.UrlSet, JsonUrl{
             Loc: el.String(),
-            Frequency: MONTHLY,
+            Frequency: sitemap.MONTHLY,
             Priority: 1.0,
         })
     }
@@ -40,20 +41,20 @@ func (urlSet *JsonUrlSet) Set(data []http.HttpResource) TemplateInterface {
 
 // Generate serializes the sitemap URLSet to Json.
 func (urlSet *JsonUrlSet) Generate() (siteMapJson []byte, err error) {
-    if len(urlSet.UrlSet) > MAXURLS {
-        err = ErrExceededMaxURLs
+    if len(urlSet.UrlSet) > sitemap.MAXURLS {
+        err = sitemap.ErrExceededMaxURLs
         return
     }
 
     var urlSetJson []byte
-    urlSetJson, err = json.Marshal(urlSet)
+    urlSetJson, err = json.MarshalIndent(urlSet, "", "    ")
 
     if err == nil {
         siteMapJson = append(siteMapJson, urlSetJson...)
     }
 
-    if len(siteMapJson) > MAXFILESIZE {
-        err = ErrExceededMaxFileSize
+    if len(siteMapJson) > sitemap.MAXFILESIZE {
+        err = sitemap.ErrExceededMaxFileSize
     }
 
     return siteMapJson, err
